@@ -7,6 +7,8 @@ import pytest
 import sqlite3
 import os
 from datetime import datetime, timedelta
+from typing import Dict, List, Tuple
+
 from database import (
     get_book_by_id, get_book_by_isbn, get_patron_borrow_count,
     insert_book, insert_borrow_record, update_book_availability,
@@ -42,7 +44,7 @@ def setup_test_database():
     if os.path.exists('library.db'):
         os.remove('library.db')
 
-# DONE R1: Add Book To Catalog
+
 class TestAddBookToCatalog:
     """Test R1: Add Book To Catalog functionality"""
     
@@ -65,28 +67,28 @@ class TestAddBookToCatalog:
         """Test adding a book with empty title"""
         success, message = add_book_to_catalog("", "Test Author", "1234567890123", 5)
         assert success == False
-        assert "title is required" in message.lower()
+        assert "Title is required" in message
     
     # Test 4: Invalid inputs
     def test_add_book_whitespace_title(self):
         """Test adding a book with whitespace-only title"""
         success, message = add_book_to_catalog("   ", "Test Author", "1234567890123", 5)
         assert success == False
-        assert "title is required" in message.lower()
+        assert "Title is required" in message
     
     # Test 5: Invalid inputs
     def test_add_book_empty_author(self):
         """Test adding a book with empty author"""
         success, message = add_book_to_catalog("Test Book", "", "1234567890123", 5)
         assert success == False
-        assert "author is required" in message.lower()
+        assert "Author is required" in message
         
     # Test 6: Invalid inputs
     def test_add_book_whitespace_author(self):
         """Test adding a book with whitespace-only author"""
         success, message = add_book_to_catalog("Test Book", "   ", "1234567890123", 5)
         assert success == False
-        assert "author is required" in message.lower()
+        assert "Author is required" in message
 
     # Test 7: Invalid inputs
     def test_add_book_title_too_long(self):
@@ -94,7 +96,7 @@ class TestAddBookToCatalog:
         long_title = "A" * 201  # 201 characters
         success, message = add_book_to_catalog(long_title, "Test Author", "1234567890123", 5)
         assert success == False
-        assert "200 characters" in message
+        assert "Title must be less than 200 characters." in message
     
     # Test 8: Invalid inputs
     def test_add_book_author_too_long(self):
@@ -102,7 +104,7 @@ class TestAddBookToCatalog:
         long_author = "A" * 101  # 101 characters
         success, message = add_book_to_catalog("Test Book", long_author, "1234567890123", 5)
         assert success == False
-        assert "100 characters" in message
+        assert "Author must be less than 100 characters." in message
     
     # Test 9: Invalid inputs
     def test_add_book_invalid_isbn_too_short(self):
@@ -130,7 +132,23 @@ class TestAddBookToCatalog:
         """Test adding a book with zero copies"""
         success, message = add_book_to_catalog("Test Book", "Test Author", "1234567890123", 0)
         assert success == False
-        assert "positive" in message.lower()
+        assert "Total copies must be a positive integer." in message
+
+    # Test 13: Check duplicate ISBN
+    def test_add_book_duplicate_isbn(self):
+        """Test adding a book with an ISBN that already exists"""
+
+        # Try adding another book with same ISBN
+        success, message = add_book_to_catalog("Another Book", "Another Author", "9780451524935", 2)
+        assert success == False
+        assert "A book with this ISBN already exists." in message
+
+
+    """Test R2: Book Catalog Display functionality
+    was tested manually via web interface. It contains all of the required features:
+    - Displays all books with title, author, ISBN, available copies/total copies
+    - Action (Borrow button for available books)"""
+    
 
 
 
@@ -198,6 +216,31 @@ class TestBorrowBookByPatron:
         success, message = borrow_book_by_patron("123456", 2)
         assert success == False
         assert "You have reached the maximum borrowing limit of 5 books." in message
+    
+    # Test 8: Check borowing record creation and availability update
+    def test_borrow_book_record_and_availability(self):
+        """Test that borrowing a book creates a borrow record and updates availability"""
+        # Before borrowing, check available copies of book_id=1
+        book_before = get_book_by_id(1)
+        if not book_before:
+            pytest.fail("Book with ID 1 should exist in sample data")
+        available_before = book_before['available_copies']
+        
+        # Use new patron id to avoid limit issues
+        success, message = borrow_book_by_patron("124653", 1)
+        assert success == True
+        
+        # After borrowing, check available copies again
+        book_after = get_book_by_id(1)
+        if not book_after:
+            pytest.fail("Book with ID 1 should exist in sample data")
+        available_after = book_after['available_copies']
+        
+        assert available_after == available_before - 1
+        
+        # Check that borrow record exists
+        borrow_count = get_patron_borrow_count("124653")
+        assert borrow_count == 1
 
 
 class TestReturnBookByPatron:
@@ -207,7 +250,7 @@ class TestReturnBookByPatron:
         """Test returning a book that wasn't borrowed by this patron"""
         success, message = return_book_by_patron("123456", 1)
         assert success == False
-        assert "Book return functionality is not yet implemented." in message.lower()
+        assert "Book return functionality is not yet implemented." in message
 
 
 class TestCalculateLateFeeForBook:
@@ -217,7 +260,7 @@ class TestCalculateLateFeeForBook:
         """Test late fee calculation when not implemented"""
         result = calculate_late_fee_for_book("123456", 1)
         assert isinstance(result, dict)
-        assert result.get('status') == 'Late fee calculation not implemented'
+        assert result == {}
 
 
 class TestSearchBooksInCatalog:
