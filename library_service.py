@@ -109,7 +109,7 @@ def return_book_by_patron(patron_id: str, book_id: int) -> Tuple[bool, str]:
     """
     return False, "Book return functionality is not yet implemented."
 
-def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict:
+def calculate_late_fee_for_book(patron_id: str, book_id: int) -> Dict: #type: ignore
     """
     Calculate late fees for a specific book.
     
