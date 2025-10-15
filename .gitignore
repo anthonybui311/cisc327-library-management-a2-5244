@@ -8,6 +8,3 @@ __pycache__/
 
 # SQlite database
 *.db
-
-# Test
-tests/
