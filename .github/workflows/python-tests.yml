@@ -34,16 +34,15 @@ jobs:
 
     - name: Run Human-Written Tests
       run: |
-        pytest tests/test_library_service.py -v --tb=short --cov=library_service --cov-report=term-missing --cov-report=xml --cov-append
+        pytest tests/test_library_service.py -v --tb=short
 
     - name: Run AI-Generated Tests
       run: |
-        pytest tests/test_library_ai_generated.py -v --tb=short --cov=library_service --cov-report=term-missing --cov-report=xml --cov-append
+        pytest tests/test_library_ai_generated.py -v --tb=short
 
     - name: Test Summary
       if: always()
       run: |
         echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
         echo "Python Version: ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
-        echo "### Coverage Report" >> $GITHUB_STEP_SUMMARY
-        pytest --cov=library_service --cov-report=term >> $GITHUB_STEP_SUMMARY || true
+        echo "OS: ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
