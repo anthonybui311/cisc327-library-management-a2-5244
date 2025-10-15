@@ -1,0 +1,49 @@
+name: Python Library Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.10', '3.11', '3.12']
+
+  
+    name: Test
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Human-Written Tests
+      run: |
+        pytest tests/test_library_service.py -v --tb=short --cov=library_service --cov-report=term-missing --cov-report=xml --cov-append
+
+    - name: Run AI-Generated Tests
+      run: |
+        pytest tests/test_library_ai_generated.py -v --tb=short --cov=library_service --cov-report=term-missing --cov-report=xml --cov-append
+
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "Python Version: ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "### Coverage Report" >> $GITHUB_STEP_SUMMARY
+        pytest --cov=library_service --cov-report=term >> $GITHUB_STEP_SUMMARY || true
