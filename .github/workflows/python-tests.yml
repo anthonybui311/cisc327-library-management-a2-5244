@@ -32,13 +32,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run Human-Written Tests
+    - name: Initialize Database
       run: |
-        pytest tests/test_library_service.py -v --tb=short
+        python -c "from database import init_database; init_database()"
 
-    - name: Run AI-Generated Tests
+    - name: Run All Tests
       run: |
-        pytest tests/test_library_ai_generated.py -v --tb=short
+        pytest tests/ -v --tb=short
 
     - name: Test Summary
       if: always()
