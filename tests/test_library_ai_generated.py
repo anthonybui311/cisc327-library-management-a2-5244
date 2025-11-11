@@ -20,7 +20,7 @@ from database import (
     update_borrow_record_return_date, get_all_books, get_db_connection,
     init_database, add_sample_data, get_patron_borrowed_books
 )
-from library_service import (
+from services.library_service import (
     add_book_to_catalog,
     borrow_book_by_patron,
     return_book_by_patron,
