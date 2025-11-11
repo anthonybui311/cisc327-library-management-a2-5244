@@ -8,3 +8,4 @@ __pycache__/
 
 # SQlite database
 *.db
+*.coverage
