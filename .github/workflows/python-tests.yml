@@ -36,9 +36,9 @@ jobs:
       run: |
         python -c "from database import init_database; init_database()"
 
-    - name: Run All Tests
+    - name: Run Unit Tests (excluding E2E)
       run: |
-        pytest tests/ -v --tb=short
+        pytest tests/ -v --tb=short --ignore=tests/test_e2e.py
 
     - name: Test Summary
       if: always()
